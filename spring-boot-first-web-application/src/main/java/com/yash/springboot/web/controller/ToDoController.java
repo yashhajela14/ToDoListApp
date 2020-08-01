@@ -19,13 +19,16 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.yash.springboot.web.model.Todo;
-import com.yash.springboot.web.service.TodoService;
+import com.yash.springboot.web.service.ToDoRepository;
 
 @Controller
 public class ToDoController {
 
+//	@Autowired
+//	TodoService todoService;
+	
 	@Autowired
-	TodoService todoService;
+	ToDoRepository repository;
 
 	@InitBinder
 	protected void initBinder(WebDataBinder binder) {
@@ -37,7 +40,8 @@ public class ToDoController {
 	public String getTodoList(ModelMap model) {
 		String name = getLoggedInUserName();
 		System.out.println(name);
-		model.put("todos", todoService.retrieveTodos(name));
+		model.put("todos", repository.findByUser(name));
+//		model.put("todos", todoService.retrieveTodos(name));
 		return "list-todos";
 
 	}
@@ -61,9 +65,10 @@ public class ToDoController {
 
 	@RequestMapping(value = "/delete-todo", method = RequestMethod.GET)
 	public String deleteTodo(@RequestParam int id) {
-		if(id == 1)
-			throw new RuntimeException("Something went wrong");
-		todoService.deleteTodo(id);
+//		if(id == 1)
+//			throw new RuntimeException("Something went wrong");
+//		todoService.deleteTodo(id);
+		repository.deleteById(id);
 		return "redirect:/todolist";
 
 	}
@@ -73,14 +78,17 @@ public class ToDoController {
 		if (error.hasErrors()) {
 			return "add-todos";
 		}
-		todoService.addTodo(getLoggedInUserName(), todo.getDesc(), todo.getTargetDate(), false);
+		todo.setUser(getLoggedInUserName());
+		repository.save(todo);
+//		todoService.addTodo(getLoggedInUserName(), todo.getDesc(), todo.getTargetDate(), false);
 		return "redirect:/todolist";
 
 	}
 
 	@RequestMapping(value = "/update-todo", method = RequestMethod.GET)
 	public String showUpdateTodoList(ModelMap model, @RequestParam int id) {
-		Todo todo = todoService.retrieveTodo(id);
+//		Todo todo = todoService.retrieveTodo(id);
+		Todo todo = repository.findById(id).get();
 		model.put("todo", todo);
 		System.out.println(todo.getTargetDate());
 		System.out.println(todo.isDone());
@@ -100,7 +108,8 @@ public class ToDoController {
 		System.out.println(todo.isDone());
 
 		todo.setUser(getLoggedInUserName());
-		todoService.updateTodo(todo);
+//		todoService.updateTodo(todo);
+		repository.save(todo);
 
 		return "redirect:/todolist";
 
